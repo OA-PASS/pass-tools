@@ -33,10 +33,7 @@ func migrateBlob() cli.Command {
 			Finds submissions that contain submission metadata, and attempts
 			to migrate them to the desired format (JSON schema). 
 		`,
-		Flags: []cli.Flag{
-			flagFedoraBaseURL(&opts.fedoraBaseurl),
-			flagElasticURL(&opts.elasticURL),
-		},
+		Flags: []cli.Flag{},
 		Action: func(c *cli.Context) error {
 			return migrateBlobAction(opts, c.Args())
 		},
