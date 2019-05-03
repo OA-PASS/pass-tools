@@ -1,8 +1,6 @@
 package es
 
 import (
-	"strings"
-
 	"github.com/oa-pass/pass-tools/lib/model"
 )
 
@@ -38,13 +36,4 @@ type SubmissionResults struct {
 			Source model.Submission `json:"_source"`
 		} `json:"hits"`
 	} `json:"hits"`
-}
-
-func RelativeURI(uri string) string {
-	idx := strings.Index(uri, "/fcrepo/rest")
-	if idx < 1 {
-		return uri
-	}
-
-	return uri[idx+len(fcrepoPrefix):]
 }

@@ -59,28 +59,33 @@ func grantPI() cli.Command {
 	}
 }
 
-func grantPIAction(opts grantPIOpts, args []string) error {
+func grantPIAction(opts grantPIOpts, args []string) (err error) {
 
 	if len(args) < 2 {
-		return fmt.Errorf("At least two arguments (user, grant) expected")
+		return fmt.Errorf("at least two arguments (user, grant) expected")
 	}
 
 	user, grants := args[0], args[1:]
 
 	for _, grant := range grants {
-		err := assign.Grant{
+		err = assign.Grant{
 			ID:          grant,
 			To:          user,
 			Submissions: opts.doSubmissions,
+			BaseURI:     fedoraBaseURI(),
 			Fedora:      fedoraClient(),
 			Elastic:     elasticClient(),
 		}.Perform()
 
 		if err != nil {
-			log.Printf("Failed assining grant %s to user %s: %+v", grant, user, err)
+			log.Printf("ERROR: failed assigning grant %s to user %s: %s", grant, user, err)
 		} else {
-			log.Printf("Successfully assigned grant %s to user %s", grant, user)
+			log.Printf("Assigned grant %s to user %s", grant, user)
 		}
+	}
+
+	if err != nil {
+		log.Fatalf("Finished, but errors encountered.  Check the output")
 	}
 
 	return nil

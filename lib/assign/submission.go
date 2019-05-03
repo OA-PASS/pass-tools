@@ -14,11 +14,12 @@ import (
 type Submission struct {
 	Submitter string // URI of a submitter
 	To        string // URI or local key of User to assign the grant to
+	BaseURI   client.BaseURI
 	Fedora    client.Performer
 	Elastic   client.Performer
 }
 
-func (s Submission) Perform() error {
+func (s Submission) Perform() (err error) {
 
 	submissions, err := s.withSubmitter(s.Submitter)
 	if err != nil {
@@ -26,23 +27,23 @@ func (s Submission) Perform() error {
 	}
 
 	for _, submission := range submissions {
-		err = s.Fedora.Perform(http.MethodPatch, submission, &client.Body{
+		err = s.Fedora.Perform(http.MethodPatch, s.BaseURI.Rebase(submission), &client.Body{
 			Content: fmt.Sprintf(`{
 				"@context" : "%s",
 				"@id" : "",
 				"submitter": "%s",
 				"@type" : "Submission"
-			}`, client.Context, s.To),
+			}`, client.Context, s.BaseURI.Rebase(s.To)),
 			Type: client.ContentTypeJSONMerge,
 		}, nil)
 		if err != nil {
-			return errors.Wrap(err, "could not update submission")
+			log.Printf("ERROR could not assign submission %s to %s: %s", submission, s.To, err)
 		}
 
 		log.Printf("Assigned submission %s to %s", submission, s.To)
 	}
 
-	return nil
+	return err
 }
 
 func (s Submission) withSubmitter(submitter string) ([]string, error) {
@@ -61,7 +62,7 @@ func (s Submission) withSubmitter(submitter string) ([]string, error) {
 
 	submissions := make([]string, 0, results.Hits.Total)
 	for _, hit := range results.Hits.Hit {
-		submissions = append(submissions, es.RelativeURI(hit.Source.ID))
+		submissions = append(submissions, hit.Source.ID)
 	}
 
 	return submissions, nil

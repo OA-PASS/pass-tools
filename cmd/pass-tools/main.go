@@ -75,9 +75,13 @@ func fedoraClient() *client.Simple {
 
 	return &client.Simple{
 		Requester:   &http.Client{},
-		BaseURI:     client.BaseURI(globalOpts.fedoraBaseurl),
+		BaseURI:     fedoraBaseURI(),
 		Credentials: credentials,
 	}
+}
+
+func fedoraBaseURI() client.BaseURI {
+	return client.BaseURI(globalOpts.fedoraBaseurl)
 }
 
 func elasticClient() *client.Simple {

@@ -6,7 +6,7 @@ import (
 	"github.com/oa-pass/pass-tools/lib/client"
 )
 
-func TestPrivateWithPublic(t *testing.T) {
+func TestJoin(t *testing.T) {
 
 	cases := []struct {
 		testName string
@@ -49,6 +49,51 @@ func TestPrivateWithPublic(t *testing.T) {
 		c := c
 		t.Run(c.testName, func(t *testing.T) {
 			result := client.BaseURI(c.baseuri).Join(c.path)
+
+			if result != c.expected {
+				t.Fatalf("%s did not match expected %s", result, c.expected)
+			}
+		})
+	}
+}
+
+func TestRebase(t *testing.T) {
+	cases := []struct {
+		testName string
+		baseuri  string
+		path     string
+		expected string
+	}{{
+		testName: "basic",
+		baseuri:  "http://example.org/foo/bar/",
+		path:     "http://example.org/foo/bar/baz/foo",
+		expected: "http://example.org/foo/bar/baz/foo",
+	}, {
+		testName: "different hosts",
+		baseuri:  "http://example.org/foo/bar/",
+		path:     "http://foo.local:8080/foo/bar/baz/foo",
+		expected: "http://example.org/foo/bar/baz/foo",
+	}, {
+		testName: "query and hash",
+		baseuri:  "http://example.org/foo/bar/",
+		path:     "http://foo.local:8080/foo/bar/baz/foo?foo=bar#baz",
+		expected: "http://example.org/foo/bar/baz/foo?foo=bar#baz",
+	}, {
+		testName: "different base paths",
+		baseuri:  "http://example.org/foo/bar/",
+		path:     "http://foo.local:8080/baz/foo",
+		expected: "http://foo.local:8080/baz/foo",
+	}, {
+		testName: "not a uri",
+		baseuri:  "http://example.org/foo/bar/",
+		path:     "foo/bar/baz/foo",
+		expected: "foo/bar/baz/foo",
+	}}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.testName, func(t *testing.T) {
+			result := client.BaseURI(c.baseuri).Rebase(c.path)
 
 			if result != c.expected {
 				t.Fatalf("%s did not match expected %s", result, c.expected)

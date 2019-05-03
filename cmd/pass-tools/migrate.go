@@ -49,6 +49,7 @@ func migrateBlob() cli.Command {
 func migrateBlobAction(opts migrateOpts, args []string) error {
 	return migrate.MetadataV0toV1{
 		DryRun:  opts.dryRun,
+		BaseURI: fedoraBaseURI(),
 		Fedora:  fedoraClient(),
 		Elastic: elasticClient(),
 	}.Perform()

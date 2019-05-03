@@ -2,10 +2,9 @@
 package assign
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
-
-	"fmt"
 
 	"github.com/oa-pass/pass-tools/lib/client"
 	"github.com/oa-pass/pass-tools/lib/es"
@@ -16,7 +15,8 @@ import (
 type Grant struct {
 	ID          string // local key of a grant
 	To          string // URI or local key of User to assign the grant to
-	Submissions bool   // Assign submissions where submitter is the old PI
+	BaseURI     client.BaseURI
+	Submissions bool // Assign submissions where submitter is the old PI
 	Fedora      client.Performer
 	Elastic     client.Performer
 }
@@ -32,13 +32,13 @@ func (g Grant) Perform() error {
 		return errors.Wrapf(err, "failed to find user")
 	}
 
-	err = g.Fedora.Perform(http.MethodPatch, grant.ID, &client.Body{
+	err = g.Fedora.Perform(http.MethodPatch, g.BaseURI.Rebase(grant.ID), &client.Body{
 		Content: fmt.Sprintf(`{
 			"@context" : "%s",
 			"@id" : "",
 			"pi": "%s"
 			"@type" : "Grant"
-		}`, client.Context, user),
+		}`, client.Context, g.BaseURI.Rebase(user)),
 		Type: client.ContentTypeJSONMerge,
 	}, nil)
 
@@ -47,8 +47,9 @@ func (g Grant) Perform() error {
 	}
 
 	return Submission{
-		Submitter: es.RelativeURI(grant.PI),
+		Submitter: grant.PI,
 		To:        user,
+		BaseURI:   g.BaseURI,
 		Fedora:    g.Fedora,
 		Elastic:   g.Elastic,
 	}.Perform()
@@ -78,17 +79,17 @@ func (g Grant) findGrant(id string) (*model.Grant, error) {
 	err := g.find("Grant", "localKey", id, &results)
 
 	if results.Hits.Total != 1 {
-		return nil, errors.Errorf("Expected one grant for %s, got %d", id, results.Hits.Total)
+		return nil, errors.Errorf("Expected one grant for %s, got %d %+v", id, results.Hits.Total, results)
 	}
 
 	return &results.Hits.Hit[0].Source, err
 }
 
 func (g Grant) find(t, field, key string, resultsPtr interface{}) error {
+
 	return errors.Wrapf(g.Elastic.Perform(http.MethodPost, "", &client.Body{
 		Content: es.QueryMatch(map[string]string{
 			"@type": t,
 			field:   key,
-		}, 2),
-		Type: client.ContentTypeJSON}, resultsPtr), "elasticsearch query for %s ($%s = %s) failed", t, key, field)
+		}, 2), Type: client.ContentTypeJSON}, resultsPtr), "elasticsearch query for %s ($%s = %s) failed", t, key, field)
 }
