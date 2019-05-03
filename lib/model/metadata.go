@@ -33,5 +33,5 @@ type Author struct {
 
 type ISSN struct {
 	ISSN    string `json:"issn,omitempty"`
-	PubType string `json:"pubType,omitEmpty"`
+	PubType string `json:"pubType,omitempty"`
 }

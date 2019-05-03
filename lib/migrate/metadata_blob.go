@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/OA-PASS/metadata-schemas/lib/jsonschema"
+	"github.com/OA-PASS/metadata-schemas/lib/schemas"
 	"github.com/oa-pass/pass-tools/lib/client"
 	"github.com/oa-pass/pass-tools/lib/es"
 	"github.com/oa-pass/pass-tools/lib/model"
@@ -16,6 +18,7 @@ import (
 
 type MetadataV0toV1 struct {
 	DryRun  bool
+	BaseURI client.BaseURI
 	Fedora  client.Performer
 	Elastic client.Performer
 }
@@ -45,12 +48,22 @@ func (m MetadataV0toV1) Perform() error {
 		}
 		sub.Metadata = string(serializedMetadata)
 
+		global, err := schemas.Load("jhu/global.json")
+		if err != nil {
+			return errors.Wrap(err, "Could not load schema")
+		}
+
+		err = jsonschema.NewValidator(global).Validate(serializedMetadata)
+		if err != nil {
+			log.Printf("ERROR schema invalid %+s", sub.Metadata)
+		}
+
 		if m.DryRun {
 			log.Printf("Would have written %s", sub.Metadata)
 			continue
 		}
 
-		err = m.Fedora.Perform(http.MethodPatch, es.RelativeURI(sub.ID), &client.Body{
+		err = m.Fedora.Perform(http.MethodPatch, m.BaseURI.Rebase(sub.ID), &client.Body{
 			Content: sub, Type: client.ContentTypeJSONMerge}, nil)
 		if err != nil {
 			log.Printf("ERROR: could not update submission %s: %s", sub.ID, err)

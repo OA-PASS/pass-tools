@@ -31,6 +31,7 @@ type MetadataCommon struct {
 	} `json:"authors"`
 	UnderEmbargo   string `json:"under-embargo"`
 	EmbargoEndDate string `json:"Embargo-end-date"`
+	Subjects       string `json:"subjects"`
 }
 
 type MetadataJ10p struct {
