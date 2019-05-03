@@ -25,7 +25,7 @@ func main() {
 	app.EnableBashCompletion = true
 	app.Commands = []cli.Command{
 		assignActions(),
-		migrate(),
+		migrateActions(),
 	}
 	app.Flags = []cli.Flag{
 		cli.StringFlag{

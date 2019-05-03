@@ -1,10 +1,11 @@
 package main
 
 import (
+	"github.com/oa-pass/pass-tools/lib/migrate"
 	"github.com/urfave/cli"
 )
 
-func migrate() cli.Command {
+func migrateActions() cli.Command {
 
 	return cli.Command{
 		Name:  "migrate",
@@ -19,8 +20,7 @@ func migrate() cli.Command {
 }
 
 type migrateOpts struct {
-	fedoraBaseurl string
-	elasticURL    string
+	dryRun bool
 }
 
 func migrateBlob() cli.Command {
@@ -33,7 +33,13 @@ func migrateBlob() cli.Command {
 			Finds submissions that contain submission metadata, and attempts
 			to migrate them to the desired format (JSON schema). 
 		`,
-		Flags: []cli.Flag{},
+		Flags: []cli.Flag{
+			cli.BoolFlag{
+				Name:        "dry-run",
+				Usage:       "Retrieves and transforms metadata, but does not update submission records",
+				Destination: &opts.dryRun,
+			},
+		},
 		Action: func(c *cli.Context) error {
 			return migrateBlobAction(opts, c.Args())
 		},
@@ -41,5 +47,9 @@ func migrateBlob() cli.Command {
 }
 
 func migrateBlobAction(opts migrateOpts, args []string) error {
-	return nil
+	return migrate.MetadataV0toV1{
+		DryRun:  opts.dryRun,
+		Fedora:  fedoraClient(),
+		Elastic: elasticClient(),
+	}.Perform()
 }

@@ -20,12 +20,22 @@ type IDResults struct {
 	} `json:"hits"`
 }
 
-// GrantResults encapsulates an elasticsearch results containing matching grants
+// GrantResults encapsulates elasticsearch results containing matching grants
 type GrantResults struct {
 	Hits struct {
 		Total int `json:"total"`
 		Hit   []struct {
 			Source model.Grant `json:"_source"`
+		} `json:"hits"`
+	} `json:"hits"`
+}
+
+// SubmissionResults encapsulates elasticsearch results containing matching submissions
+type SubmissionResults struct {
+	Hits struct {
+		Total int `json:"total"`
+		Hit   []struct {
+			Source model.Submission `json:"_source"`
 		} `json:"hits"`
 	} `json:"hits"`
 }
