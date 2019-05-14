@@ -101,9 +101,16 @@ Or, with global options
 
 ### Migrating metadata blobs
 
-The `migrate metadata` subcommands migrate submission metadata blobs from the original format (not defined by any schema), to blobs governed by the schema https://oa-pass.github.io/metadata-schemas/jhu/global.json
+The `migrate metadata` subcommands migrate submission metadata blobs from the original format (not defined by any schema), to blobs governed by the schema https://oa-pass.github.io/metadata-schemas/jhu/global.json.  Its only option is `--dry-run`, which prevents the application from writing to the repository.   `--dry-run` will still discover, transform, and validate the
+resulting metadata; just not write it to the repository.
 
-    pass-tools migrate metadata
+It's recommended to perform a dry run first:
+
+    pass-tools migrate metadata --dry-run
+
+Then, if all results are successful, perform a true migration
+
+    pass-tooms migrate metadata
 
 ## Building
 
