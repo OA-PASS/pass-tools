@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/oa-pass/pass-tools/lib/log"
 	"github.com/oa-pass/pass-tools/lib/migrate"
 	"github.com/urfave/cli"
 )
@@ -20,7 +21,8 @@ func migrateActions() cli.Command {
 }
 
 type migrateOpts struct {
-	dryRun bool
+	dryRun  bool
+	verbose int
 }
 
 func migrateBlob() cli.Command {
@@ -39,6 +41,12 @@ func migrateBlob() cli.Command {
 				Usage:       "Retrieves and transforms metadata, but does not update submission records",
 				Destination: &opts.dryRun,
 			},
+			cli.IntFlag{
+				Name:        "verbosity, v",
+				Usage:       "Set the level of log verbosity. accepts values -1, 0, 1, 2",
+				EnvVar:      "VERBOSE",
+				Destination: &opts.verbose,
+			},
 		},
 		Action: func(c *cli.Context) error {
 			return migrateBlobAction(opts, c.Args())
@@ -47,10 +55,12 @@ func migrateBlob() cli.Command {
 }
 
 func migrateBlobAction(opts migrateOpts, args []string) error {
+	LOG := log.New(opts.verbose)
+
 	return migrate.MetadataV0toV1{
 		DryRun:  opts.dryRun,
 		BaseURI: fedoraBaseURI(),
-		Fedora:  fedoraClient(),
-		Elastic: elasticClient(),
+		Fedora:  fedoraClient(LOG),
+		Elastic: elasticClient(LOG),
 	}.Perform()
 }

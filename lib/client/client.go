@@ -3,11 +3,13 @@ package client
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"strings"
 
+	"github.com/oa-pass/pass-tools/lib/log"
 	"github.com/pkg/errors"
 )
 
@@ -35,6 +37,7 @@ type Simple struct {
 	Requester
 	BaseURI     BaseURI
 	Credentials *Credentials
+	Log         log.Instance
 }
 
 // Credentials for Basic Auth
@@ -76,10 +79,15 @@ func (s *Simple) Read(url string, resultPointer interface{}) error {
 func (s *Simple) Perform(method, url string, body *Body, resultPointer interface{}) (err error) {
 
 	url = s.BaseURI.Join(url)
+	var sniff bytes.Buffer
 
 	reader, err := toReader(body)
 	if err != nil {
 		return errors.Wrapf(err, "could not form input body from %s", body)
+	}
+
+	if s.Log.Trace != nil {
+		reader = io.TeeReader(reader, &sniff)
 	}
 
 	request, err := http.NewRequest(method, url, reader)
@@ -102,15 +110,36 @@ func (s *Simple) Perform(method, url string, body *Body, resultPointer interface
 	}
 	defer resp.Body.Close()
 
+	if s.Log.Trace != nil {
+		sent := sniff.String()
+
+		var headers strings.Builder
+
+		for k, v := range request.Header {
+			fmt.Fprintf(&headers, "  %s: %s\n", k, strings.Join(v, ", "))
+		}
+
+		if len(sent) > 0 {
+			s.Log.Tracef("Sent %s to %s with headers:\n%s\n...and body:\n%s", method, url, headers.String(), sent)
+		} else {
+			s.Log.Tracef("Sent empty %s to %s", method, url)
+		}
+
+		s.Log.Tracef("Got response code %d from %s to %s", resp.StatusCode, method, url)
+	}
+
 	if resp.StatusCode > 299 {
 		errBody, _ := ioutil.ReadAll(resp.Body)
 		return errors.Errorf("Request failed with code %d: %s", resp.StatusCode, string(errBody))
 	}
 
-	if resultPointer != nil {
-		err = json.NewDecoder(resp.Body).Decode(resultPointer)
-	} else {
+	switch dest := resultPointer.(type) {
+	case func(io.Reader) error:
+		return dest(resp.Body)
+	case nil:
 		_, err = io.Copy(ioutil.Discard, resp.Body)
+	default:
+		return json.NewDecoder(resp.Body).Decode(resultPointer)
 	}
 
 	return err

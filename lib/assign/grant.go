@@ -8,6 +8,7 @@ import (
 
 	"github.com/oa-pass/pass-tools/lib/client"
 	"github.com/oa-pass/pass-tools/lib/es"
+	"github.com/oa-pass/pass-tools/lib/log"
 	"github.com/oa-pass/pass-tools/lib/model"
 	"github.com/pkg/errors"
 )
@@ -19,6 +20,8 @@ type Grant struct {
 	Submissions bool // Assign submissions where submitter is the old PI
 	Fedora      client.Performer
 	Elastic     client.Performer
+	DryRun      bool
+	Log         log.Instance
 }
 
 func (g Grant) Perform() error {
@@ -32,26 +35,39 @@ func (g Grant) Perform() error {
 		return errors.Wrapf(err, "failed to find user")
 	}
 
-	err = g.Fedora.Perform(http.MethodPatch, g.BaseURI.Rebase(grant.ID), &client.Body{
-		Content: fmt.Sprintf(`{
+	if !g.DryRun {
+		err := g.Fedora.Perform(http.MethodPatch, g.BaseURI.Rebase(grant.ID), &client.Body{
+			Content: fmt.Sprintf(`{
 			"@context" : "%s",
 			"@id" : "",
-			"pi": "%s"
+			"pi": "%s",
 			"@type" : "Grant"
 		}`, client.Context, g.BaseURI.Rebase(user)),
-		Type: client.ContentTypeJSONMerge,
-	}, nil)
+			Type: client.ContentTypeJSONMerge,
+		}, nil)
+
+		if err != nil {
+			return errors.Wrapf(err, "could not assign grant %s to user %s", g.ID, g.To)
+		}
+	} else {
+		g.Log.Printf("Would have assigned grant %s (%s) to user %s (%s)",
+			g.ID, g.BaseURI.Rebase(grant.ID), g.To, g.BaseURI.Rebase(user))
+	}
 
 	if !g.Submissions {
-		return errors.Wrap(err, "could not update grant")
+		g.Log.Printf("Not assigning submissions")
+		return nil
 	}
 
 	return Submission{
 		Submitter: grant.PI,
 		To:        user,
+		Grant:     grant.ID,
 		BaseURI:   g.BaseURI,
 		Fedora:    g.Fedora,
 		Elastic:   g.Elastic,
+		Log:       g.Log,
+		DryRun:    g.DryRun,
 	}.Perform()
 }
 
@@ -71,12 +87,18 @@ func (g Grant) findUser(id string) (string, error) {
 func (g Grant) findGrant(id string) (*model.Grant, error) {
 
 	if strings.HasPrefix(id, "http") {
+		g.Log.Debugf("Got an http URI for the grant, Getting it")
 		var grant model.Grant
 		return &grant, g.Fedora.Perform(http.MethodGet, id, nil, &grant)
 	}
 
 	var results es.GrantResults
+	g.Log.Debugf("Findng grant %s", id)
 	err := g.find("Grant", "localKey", id, &results)
+
+	if err != nil {
+		return nil, errors.Wrapf(err, "search for grant %s failed", id)
+	}
 
 	if results.Hits.Total != 1 {
 		return nil, errors.Errorf("Expected one grant for %s, got %d %+v", id, results.Hits.Total, results)
@@ -91,5 +113,6 @@ func (g Grant) find(t, field, key string, resultsPtr interface{}) error {
 		Content: es.QueryMatch(map[string]string{
 			"@type": t,
 			field:   key,
-		}, 2), Type: client.ContentTypeJSON}, resultsPtr), "elasticsearch query for %s ($%s = %s) failed", t, key, field)
+		}, 2), Type: client.ContentTypeJSON,
+	}, resultsPtr), "elasticsearch query for %s ($%s = %s) failed", t, key, field)
 }

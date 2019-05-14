@@ -2,14 +2,17 @@ package main
 
 import (
 	"fmt"
-	"log"
+	"os"
 
 	"github.com/oa-pass/pass-tools/lib/assign"
+	"github.com/oa-pass/pass-tools/lib/log"
 	"github.com/urfave/cli"
 )
 
 type grantPIOpts struct {
 	doSubmissions bool
+	verbose       int
+	dryRun        bool
 }
 
 func assignActions() cli.Command {
@@ -52,6 +55,17 @@ func grantPI() cli.Command {
 				EnvVar:      "GRANT_ASSIGN_SUBMISSIONS",
 				Destination: &opts.doSubmissions,
 			},
+			cli.IntFlag{
+				Name:        "verbosity, v",
+				Usage:       "Set the level of log verbosity. accepts values -1, 0, 1, 2",
+				EnvVar:      "VERBOSE",
+				Destination: &opts.verbose,
+			},
+			cli.BoolFlag{
+				Name:        "dry-run",
+				Usage:       "Logs which actions it will perform, but does not perform them",
+				Destination: &opts.dryRun,
+			},
 		},
 		Action: func(c *cli.Context) error {
 			return grantPIAction(opts, c.Args())
@@ -60,6 +74,8 @@ func grantPI() cli.Command {
 }
 
 func grantPIAction(opts grantPIOpts, args []string) (err error) {
+
+	LOG := log.New(opts.verbose)
 
 	if len(args) < 2 {
 		return fmt.Errorf("at least two arguments (user, grant) expected")
@@ -73,19 +89,22 @@ func grantPIAction(opts grantPIOpts, args []string) (err error) {
 			To:          user,
 			Submissions: opts.doSubmissions,
 			BaseURI:     fedoraBaseURI(),
-			Fedora:      fedoraClient(),
-			Elastic:     elasticClient(),
+			Fedora:      fedoraClient(LOG),
+			Elastic:     elasticClient(LOG),
+			DryRun:      opts.dryRun,
+			Log:         LOG,
 		}.Perform()
 
 		if err != nil {
-			log.Printf("ERROR: failed assigning grant %s to user %s: %s", grant, user, err)
-		} else {
-			log.Printf("Assigned grant %s to user %s", grant, user)
+			LOG.Warnf("failed assigning grant %s to user %s: %s", grant, user, err)
+		} else if !opts.dryRun {
+			LOG.Printf("Assigned grant %s to user %s", grant, user)
 		}
 	}
 
 	if err != nil {
-		log.Fatalf("Finished, but errors encountered.  Check the output")
+		LOG.Warn.Printf("Finished, but errors encountered.  Check the output")
+		os.Exit(1)
 	}
 
 	return nil

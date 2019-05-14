@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/oa-pass/pass-tools/lib/client"
+	logger "github.com/oa-pass/pass-tools/lib/log"
 	"github.com/urfave/cli"
 )
 
@@ -64,7 +65,7 @@ func main() {
 	}
 }
 
-func fedoraClient() *client.Simple {
+func fedoraClient(logs logger.Instance) *client.Simple {
 	var credentials *client.Credentials
 	if globalOpts.username != "" {
 		credentials = &client.Credentials{
@@ -77,6 +78,7 @@ func fedoraClient() *client.Simple {
 		Requester:   &http.Client{},
 		BaseURI:     fedoraBaseURI(),
 		Credentials: credentials,
+		Log:         logs,
 	}
 }
 
@@ -84,10 +86,11 @@ func fedoraBaseURI() client.BaseURI {
 	return client.BaseURI(globalOpts.fedoraBaseurl)
 }
 
-func elasticClient() *client.Simple {
+func elasticClient(logs logger.Instance) *client.Simple {
 
 	return &client.Simple{
 		Requester: &http.Client{},
 		BaseURI:   client.BaseURI(globalOpts.elasticURL),
+		Log:       logs,
 	}
 }
