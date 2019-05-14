@@ -1,0 +1,24 @@
+language: go
+env:
+- GO111MODULE=on
+go:
+- 1.12.x
+os:
+- linux
+install: true
+script:
+- go test -v ./...
+- env GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o pass-tools-Linux-x86_64 ./cmd/pass-tools
+- env GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" -o pass-tools-Darwin-x86_64 ./cmd/pass-tools
+- env GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o pass-tools-Windows-x86_64.exe ./cmd/pass-tools
+deploy:
+  provider: releases
+  api_key:
+    secure: DMpKZ3DhHaVrMA6gs/52VoEChBO4gg9qnR07B+lnJOPw4O0UGA903pqKSEkcioIjmTiVPqBFOG1xro6S0sNB+Lz0Ko/y7sz/mxlVmL5QOYQrrvxn1mACEUkY2oPDrrFFbiGBoxeeaQB8TVsViQY8WSSByBbSehhPLlE1CYn/WPIJjYls9rEX+UI3XKi7s3GaqZxEeG4OAPIfnzRk3qVMfID+Qo4R2WxvSO7idzMhsw9nhpidrpt3a01ABKdrpLIBfgl0GUPW1A5VTFAVVIOb42BUuXWy+QUWGl/id79JzZOkpi49c8J02fCkZI7ivDSIrX37LKN+MaPLSxSHgrq1Vrtm+g53dq7OkbxieGp2MZtV6iVGQnsCG88av+UC4RJ615sFdMD24miH0zFwRlPYPx012pVu9s7CRtQ8EyxE/Ps4uebG9B3MJf5rCE1VkKRAh57ngE6/+qdHcsk8sbxWKiF5DL0Mk/QbhR0UGqJ/TDzll6oXjxNX3fW6RX1VGSGqSUZfZ7MNyBmGbMbEnaGhjF22DhAweVT7GSC1diy9X1eH/fKvvjeuIcnQ6gObeA1lObn0SpKucUBGqd1gVzooNt5Mq5POuLGUheKM66jT9i8HmFSL+jHJR4lsDmTVxwryazd/wOgfaE8dGLPJTq6oNcl0bY0tfNoeJBqr6Y02IPM=
+  file: 
+    - pass-tools-Linux-x86_64
+    - pass-tools-Darwin-x86_64
+    - pass-tools-Windows-x86_64.exe
+  skip_cleanup: true
+  on:
+    tags: true
