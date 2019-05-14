@@ -13,8 +13,7 @@ script:
 - env GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o pass-tools-Windows-x86_64.exe ./cmd/pass-tools
 deploy:
   provider: releases
-  api_key:
-    secure: "BDyyDvvkB69u5AFVNghvFJFsFS7ElkV2bkhQAdrSlgyjAlm29MVFkYNwrSocJE17MgPtBxePUFKcghinaP0JuysgJ3eWQdZJ9RZ9CVSFNDlBkWf0nOYoCKa1h/y4OtzQ0+Cv1G/EKy6OztIqkvLQzK0hYXg+SZEZGy0SmKWu2Njgowg3rnagK85a0/qnNv8f1Ni78rEucyzzX+mnUuWF6xXXewiTwWKqXHvV06T+PfPWHHYExe/IY38fUZlkf5+W2/0XYBrtnZMQZB8P34X8IZ2Rjt1FGcB1/uL6baHbyUYAXnv7pxq5LtB33mZYDKknhSHW3stGes1Mz8oSo/cHH0X3upVctPVoUyQefO+aJo/WNYWK2CaEuTVtF6IqOJAm6FtOSdx7m7Jh5YWNjMwY2j+RL7xc/lbuMJKSgKxxTiCejUPBG7INwfrpoXKPteZr5wJJw8AHZcOjCLb9pEmEgdq6/jvcCb920VBhhKysegQjppejXjLPIlG5tUun3mknIXJNnkmJl6qNa14RKsVX+Lvy7SFMAvcyKiim1guGTGJlMFSMhK5iUuvYLZNCnRf0RpRg+3WvYV/gpX66WeU9wiUjhuV9F0IimqTkEgIPyauIwm3kl0jLo8n4JKC/JFZ1rkfWlLpU84KOhfMuyJiFD/3nnuO9DkkqKYOPcVRYYCg="
+  api_key: $DEPLOY_KEY
   file: 
     - pass-tools-Linux-x86_64
     - pass-tools-Darwin-x86_64
