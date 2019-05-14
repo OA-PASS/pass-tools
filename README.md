@@ -110,7 +110,7 @@ It's recommended to perform a dry run first:
 
 Then, if all results are successful, perform a true migration
 
-    pass-tooms migrate metadata
+    pass-tools migrate metadata
 
 ## Building
 
