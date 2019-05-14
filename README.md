@@ -86,18 +86,28 @@ or, using environment variables
 ### Assigning a PI (and associated submissions) to users
 
 Use the `assign pi` subcommands to assign a grant PI to a new person   This is mainly intended for massaging data on demo and test PASS instances.
-The `-s` flag optionally assigns any submissions that were associated with the grant (and have the grant's former PI as the submitter) to the new user.
+The `-s` flag optionally assigns any submissions that were associated with the grant (and have the grant's former PI as the submitter) to the new user, and the
+`--dry-run` flag just prints out what it _would_ do, without updating the repository.
 
-The first argument is expected to be an ID (URL, or locatorID) of the person to 
+The first argument is expected to be an ID (URL, or locatorID) of the person to
 whom grants are being assigned, followed by any number of grant IDs (URLs, or localKeys) of grants to assign to the given user.
 
-For example:
+For example, it is wise to start with a dry run
+
+    pass-tools assign pi -s --dry-run johnshopkins.edu:jhed:newsubmitter1 johnshopkins.edu:grant:1234 johnshopkins.edu:grant:5678
+
+Then for real:
 
     pass-tools assign pi -s johnshopkins.edu:jhed:newsubmitter1 johnshopkins.edu:grant:1234 johnshopkins.edu:grant:5678
 
 Or, with global options
 
-    pass-tools -u myUser -p myPass assign pi  -s johnshopkins.edu:jhed:newsubmitter1 johnshopkins.edu:grant:1234 johnshopkins.edu:grant:5678
+    pass-tools -u myUser -p myPass assign pi -s johnshopkins.edu:jhed:newsubmitter1 johnshopkins.edu:grant:1234 johnshopkins.edu:grant:5678
+
+Debugging will be printed if used with the `-v` option.  A higher integer means more logging (up to `-v 2`).  At the highest logging level, all network 
+requests will be printed.
+
+    pass-tools assign pi -s --dry-run -v 2 johnshopkins.edu:jhed:newsubmitter1 johnshopkins.edu:grant:1234 johnshopkins.edu:grant:5678
 
 ### Migrating metadata blobs
 
@@ -111,6 +121,9 @@ It's recommended to perform a dry run first:
 Then, if all results are successful, perform a true migration
 
     pass-tools migrate metadata
+
+Debugging will be printed if used with the `-v` option.  A higher integer means more logging (up to `-v 2`).  At the highest logging level, all network 
+requests will be printed.
 
 ## Building
 
