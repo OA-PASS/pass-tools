@@ -10,19 +10,19 @@ Pre-compiled binaries are present in [the releases section](https://github.com/o
 
 For Mac OS:
 
-    $ base=https://github.com/oa-pass/pass-tools/releases/download/v0.0.2 &&
+    $ base=https://github.com/oa-pass/pass-tools/releases/download/v0.0.3 &&
       curl -L $base/pass-tools-$(uname -s)-$(uname -m) >/usr/local/bin/pass-tools &&
       chmod +x /usr/local/bin/pass-tools
 
 For Linux:
 
-    $ base=https://github.com/oa-pass/pass-tools/releases/download/v0.0.2 &&
+    $ base=https://github.com/oa-pass/pass-tools/releases/download/v0.0.3 &&
       curl -L $base/pass-tools-$(uname -s)-$(uname -m) >/tmp/pass-tools &&
       sudo install /tmp/pass-tools /usr/local/bin/pass-tools
 
 For Windows, using Git Bash:
 
-    $ base=https://github.com/oa-pass/pass-tools/releases/download/v0.0.2 &&
+    $ base=https://github.com/oa-pass/pass-tools/releases/download/v0.0.3 &&
       mkdir -p "$HOME/bin" &&
       curl -L $base/pass-tools-Windows-x86_64.exe > "$HOME/bin/pass-tools.exe" &&
       chmod +x "$HOME/bin/pass-tools.exe"
