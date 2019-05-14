@@ -56,6 +56,7 @@ func (m MetadataV0toV1) Perform() error {
 		err = jsonschema.NewValidator(global).Validate(serializedMetadata)
 		if err != nil {
 			log.Printf("ERROR schema invalid %+s", sub.Metadata)
+			continue
 		}
 
 		if m.DryRun {
@@ -64,10 +65,14 @@ func (m MetadataV0toV1) Perform() error {
 		}
 
 		err = m.Fedora.Perform(http.MethodPatch, m.BaseURI.Rebase(sub.ID), &client.Body{
-			Content: sub, Type: client.ContentTypeJSONMerge}, nil)
+			Content: model.Submission{
+				Context:  sub.Context,
+				Metadata: sub.Metadata,
+			}, Type: client.ContentTypeJSONMerge}, nil)
 		if err != nil {
 			log.Printf("ERROR: could not update submission %s: %s", sub.ID, err)
 		}
+		log.Printf("Migrated metadata of submission %s", sub.ID)
 	}
 
 	return nil

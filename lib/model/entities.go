@@ -1,12 +1,14 @@
 package model
 
 type Grant struct {
-	ID string `json:"@id"`
-	PI string `json:"pi,omitempty"`
+	Context string `json:"@context,omitempty"`
+	ID      string `json:"@id"`
+	PI      string `json:"pi,omitempty"`
 }
 
 type Submission struct {
-	ID        string `json:"@id,omitempty"`
+	Context   string `json:"@context,omitempty"`
+	ID        string `json:"@id"`
 	Submitter string `json:"submitter,omitempty"`
 	Metadata  string `json:"metadata,omitempty"`
 }
